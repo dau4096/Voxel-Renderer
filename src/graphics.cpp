@@ -257,7 +257,7 @@ static inline float getBitsFromFaceDirection(FaceDirection fDir) {
 
 void getVertsAndIndices(
 		glm::vec3 position, glm::vec3 angle, glm::vec3 scale,
-		std::array<float, 96>* vertices, std::array<GLuint, 36>* indices
+		std::array<float, 144>* vertices, std::array<GLuint, 36>* indices
 	) {
 	glm::mat4 matrix = getModelMat4(position, angle, scale);
 
@@ -266,43 +266,43 @@ void getVertsAndIndices(
 	#define POS  1.0f
 
 
-	std::array<float, 96> preVertices = {
+	std::array<float, 144> preVertices = {
 		//Lower face;
-		NEG, NEG, NEG, getBitsFromFaceDirection(F_LOWER),
-		POS, NEG, NEG, getBitsFromFaceDirection(F_LOWER),
-		NEG, POS, NEG, getBitsFromFaceDirection(F_LOWER),
-		POS, POS, NEG, getBitsFromFaceDirection(F_LOWER),
+		NEG, NEG, NEG, getBitsFromFaceDirection(F_LOWER), 0.0f, 0.0f,
+		POS, NEG, NEG, getBitsFromFaceDirection(F_LOWER), 1.0f, 0.0f,
+		NEG, POS, NEG, getBitsFromFaceDirection(F_LOWER), 0.0f, 1.0f,
+		POS, POS, NEG, getBitsFromFaceDirection(F_LOWER), 1.0f, 1.0f,
 		//Upper face;
-		NEG, NEG, POS, getBitsFromFaceDirection(F_UPPER),
-		POS, NEG, POS, getBitsFromFaceDirection(F_UPPER),
-		NEG, POS, POS, getBitsFromFaceDirection(F_UPPER),
-		POS, POS, POS, getBitsFromFaceDirection(F_UPPER),
+		NEG, NEG, POS, getBitsFromFaceDirection(F_UPPER), 0.0f, 0.0f,
+		POS, NEG, POS, getBitsFromFaceDirection(F_UPPER), 1.0f, 0.0f,
+		NEG, POS, POS, getBitsFromFaceDirection(F_UPPER), 0.0f, 1.0f,
+		POS, POS, POS, getBitsFromFaceDirection(F_UPPER), 1.0f, 1.0f,
 
 		//-X face;
-		NEG, NEG, NEG, getBitsFromFaceDirection(F_FRONT),
-		NEG, POS, NEG, getBitsFromFaceDirection(F_FRONT),
-		NEG, NEG, POS, getBitsFromFaceDirection(F_FRONT),
-		NEG, POS, POS, getBitsFromFaceDirection(F_FRONT),
+		NEG, NEG, NEG, getBitsFromFaceDirection(F_FRONT), 0.0f, 0.0f,
+		NEG, POS, NEG, getBitsFromFaceDirection(F_FRONT), 1.0f, 0.0f,
+		NEG, NEG, POS, getBitsFromFaceDirection(F_FRONT), 0.0f, 1.0f,
+		NEG, POS, POS, getBitsFromFaceDirection(F_FRONT), 1.0f, 1.0f,
 		//+X face;
-		POS, NEG, NEG, getBitsFromFaceDirection(F_BACK_),
-		POS, POS, NEG, getBitsFromFaceDirection(F_BACK_),
-		POS, NEG, POS, getBitsFromFaceDirection(F_BACK_),
-		POS, POS, POS, getBitsFromFaceDirection(F_BACK_),
+		POS, NEG, NEG, getBitsFromFaceDirection(F_BACK_), 0.0f, 0.0f,
+		POS, POS, NEG, getBitsFromFaceDirection(F_BACK_), 1.0f, 0.0f,
+		POS, NEG, POS, getBitsFromFaceDirection(F_BACK_), 0.0f, 1.0f,
+		POS, POS, POS, getBitsFromFaceDirection(F_BACK_), 1.0f, 1.0f,
 
 		//-Y face;
-		NEG, NEG, NEG, getBitsFromFaceDirection(F_LEFT_),
-		POS, NEG, NEG, getBitsFromFaceDirection(F_LEFT_),
-		NEG, NEG, POS, getBitsFromFaceDirection(F_LEFT_),
-		POS, NEG, POS, getBitsFromFaceDirection(F_LEFT_),
+		NEG, NEG, NEG, getBitsFromFaceDirection(F_LEFT_), 0.0f, 0.0f,
+		POS, NEG, NEG, getBitsFromFaceDirection(F_LEFT_), 1.0f, 0.0f,
+		NEG, NEG, POS, getBitsFromFaceDirection(F_LEFT_), 0.0f, 1.0f,
+		POS, NEG, POS, getBitsFromFaceDirection(F_LEFT_), 1.0f, 1.0f,
 		//+Y face;
-		NEG, POS, NEG, getBitsFromFaceDirection(F_RIGHT),
-		POS, POS, NEG, getBitsFromFaceDirection(F_RIGHT),
-		NEG, POS, POS, getBitsFromFaceDirection(F_RIGHT),
-		POS, POS, POS, getBitsFromFaceDirection(F_RIGHT),
+		NEG, POS, NEG, getBitsFromFaceDirection(F_RIGHT), 0.0f, 0.0f,
+		POS, POS, NEG, getBitsFromFaceDirection(F_RIGHT), 1.0f, 0.0f,
+		NEG, POS, POS, getBitsFromFaceDirection(F_RIGHT), 0.0f, 1.0f,
+		POS, POS, POS, getBitsFromFaceDirection(F_RIGHT), 1.0f, 1.0f,
 	};
 
 	for (int vIndex=0; vIndex<24; vIndex++) {
-		int actualIndex = (vIndex * 4);
+		int actualIndex = (vIndex * 6);
 		glm::vec4 posVec = glm::vec4(
 			preVertices[actualIndex + 0],
 			preVertices[actualIndex + 1],
@@ -313,7 +313,9 @@ void getVertsAndIndices(
 		(*vertices)[actualIndex + 0] = newPosVec.x;
 		(*vertices)[actualIndex + 1] = newPosVec.y;
 		(*vertices)[actualIndex + 2] = newPosVec.z;
-		(*vertices)[actualIndex + 3] = preVertices[actualIndex + 3];
+		(*vertices)[actualIndex + 3] = preVertices[actualIndex + 3]; //Face Dir bits
+		(*vertices)[actualIndex + 4] = preVertices[actualIndex + 4]; //UVX
+		(*vertices)[actualIndex + 5] = preVertices[actualIndex + 5]; //UVY
 	}
 
 	std::array<GLuint, 36> preIndices = {
@@ -329,7 +331,7 @@ void getVertsAndIndices(
 
 
 GLuint getVAO(glm::vec3 position, glm::vec3 angle, glm::vec3 scale) {
-	std::array<float, 96> vertices;
+	std::array<float, 144> vertices;
 	std::array<GLuint, 36> indices;
 	getVertsAndIndices(position, angle, scale, &vertices, &indices);
 
@@ -354,12 +356,16 @@ GLuint getVAO(glm::vec3 position, glm::vec3 angle, glm::vec3 scale) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices.data(), GL_STATIC_DRAW);
 
 	//Define position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	//Define direction attribute
-	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+
+	//Define UV attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(4 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0);
 
@@ -482,7 +488,8 @@ void prepareOpenGL() {
 	GLIndex::voxelSSBO = graphics::createShaderStorageBufferObject(
 		0, sizeof(GLuint) * constants::VOXEL_GRID_SIZE
 	);
-	GLIndex::voxelVAO = graphics::getVAO(glm::vec3(-1.0f, 4.0f, 0.0f), glm::vec3(0.785398f, 0.785398f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+	//GLIndex::voxelVAO = graphics::getVAO(glm::vec3(-1.0f, 4.0f, 0.0f), glm::vec3(0.785398f, 0.785398f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+	GLIndex::voxelVAO = graphics::getVAO(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
 
 	//Voxel shader

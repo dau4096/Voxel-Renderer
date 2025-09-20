@@ -28,6 +28,13 @@ void framebufferSizeCallback(GLFWwindow* Window, int width, int height) {
 
 
 
+void prepareVoxelData() {
+	//10 x 5 x 5
+	voxelData.push_back(GLuint(1u));
+}
+
+
+
 const std::vector<int> monitoredKeys = {
 	GLFW_KEY_W, GLFW_KEY_S,
 	GLFW_KEY_A, GLFW_KEY_D,
@@ -62,7 +69,7 @@ void handleInputs() {
 	camera.viewAngle.x += cursorXDelta * constants::TO_RAD * constants::CAMERA_TURN_SPEED;
 	camera.viewAngle.x = fmodf(camera.viewAngle.x + constants::PI*3.0f, constants::PI2) - constants::PI;
 	double dY = cursorYDelta * constants::TO_RAD * constants::CAMERA_TURN_SPEED;
-	camera.viewAngle.y = glm::clamp(float(camera.viewAngle.y-dY), -0.125f*constants::PI, 0.125f*constants::PI);
+	camera.viewAngle.y = glm::clamp(float(camera.viewAngle.y-dY), verticalFOV-0.5f*constants::PI, 0.5f*constants::PI-verticalFOV);
 }
 
 
@@ -90,6 +97,7 @@ int main() {
 
 	graphics::prepareOpenGL();
 	double maxFrameTime = 1.0f/display::MAX_FREQ;
+	prepareVoxelData();
 	frame::updateSSBOS();
 	for (int key : monitoredKeys) {
 		keyMap[key] = false;

@@ -5,18 +5,18 @@ layout(location=0) in vec3 aPos;
 layout(location=1) in float aDirection;
 layout(location=2) in vec2 aUV;
 
-out vec3 fragPosition;
-out vec2 fragUV;
-out flat int fragDirection;
+out vec3 facePosition;
+out vec2 faceUV;
+out flat int faceDirection;
 
 uniform mat4 pvmMatrix;
 
 
 
 void main() {
-	fragDirection = int(aDirection);
-	fragUV = aUV;
+	faceDirection = int(aDirection);
+	faceUV = aUV;
 
-	fragPosition = aPos;
+	facePosition = aPos;
 	gl_Position = pvmMatrix * vec4(aPos, 1.0);
 }

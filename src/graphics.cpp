@@ -208,51 +208,6 @@ static glm::mat4 getModelMat4(glm::vec3 pos, glm::vec3 rot, glm::vec3 scale) {
 
 
 
-enum FaceDirection {
-	F_LOWER, F_UPPER,
-	F_FRONT, F_BACK_,
-	F_LEFT_, F_RIGHT
-};
-
-
-
-static inline float getBitsFromFaceDirection(FaceDirection fDir) {
-	int iValue;
-	switch (fDir) {
-		case F_LOWER: {
-			iValue = 0b000;
-			break;
-		}
-		case F_UPPER: {
-			iValue = 0b001;
-			break;
-		}
-
-		case F_FRONT: {
-			iValue = 0b000;
-			break;
-		}
-		case F_BACK_: {
-			iValue = 0b010;
-			break;
-		}
-
-		case F_LEFT_: {
-			iValue = 0b000;
-			break;
-		}
-		case F_RIGHT: {
-			iValue = 0b100;
-			break;
-		}
-
-		default: {
-			raise("Unknown FaceDirection.");
-		}
-	}
-
-	return static_cast<float>(iValue);
-}
 
 
 void getVertsAndIndices(
@@ -267,38 +222,39 @@ void getVertsAndIndices(
 
 
 	std::array<float, 144> preVertices = {
+		//X   Y    Z   dir    U     V
 		//Lower face;
-		NEG, NEG, NEG, getBitsFromFaceDirection(F_LOWER), 0.0f, 0.0f,
-		POS, NEG, NEG, getBitsFromFaceDirection(F_LOWER), 1.0f, 0.0f,
-		NEG, POS, NEG, getBitsFromFaceDirection(F_LOWER), 0.0f, 1.0f,
-		POS, POS, NEG, getBitsFromFaceDirection(F_LOWER), 1.0f, 1.0f,
+		NEG, NEG, NEG, 0.0f, 0.0f, 0.0f,
+		POS, NEG, NEG, 0.0f, 1.0f, 0.0f,
+		NEG, POS, NEG, 0.0f, 0.0f, 1.0f,
+		POS, POS, NEG, 0.0f, 1.0f, 1.0f,
 		//Upper face;
-		NEG, NEG, POS, getBitsFromFaceDirection(F_UPPER), 0.0f, 0.0f,
-		POS, NEG, POS, getBitsFromFaceDirection(F_UPPER), 1.0f, 0.0f,
-		NEG, POS, POS, getBitsFromFaceDirection(F_UPPER), 0.0f, 1.0f,
-		POS, POS, POS, getBitsFromFaceDirection(F_UPPER), 1.0f, 1.0f,
+		NEG, NEG, POS, 1.0f, 0.0f, 0.0f,
+		POS, NEG, POS, 1.0f, 1.0f, 0.0f,
+		NEG, POS, POS, 1.0f, 0.0f, 1.0f,
+		POS, POS, POS, 1.0f, 1.0f, 1.0f,
 
 		//-X face;
-		NEG, NEG, NEG, getBitsFromFaceDirection(F_FRONT), 0.0f, 0.0f,
-		NEG, POS, NEG, getBitsFromFaceDirection(F_FRONT), 1.0f, 0.0f,
-		NEG, NEG, POS, getBitsFromFaceDirection(F_FRONT), 0.0f, 1.0f,
-		NEG, POS, POS, getBitsFromFaceDirection(F_FRONT), 1.0f, 1.0f,
+		NEG, NEG, NEG, 2.0f, 0.0f, 0.0f,
+		NEG, POS, NEG, 2.0f, 1.0f, 0.0f,
+		NEG, NEG, POS, 2.0f, 0.0f, 1.0f,
+		NEG, POS, POS, 2.0f, 1.0f, 1.0f,
 		//+X face;
-		POS, NEG, NEG, getBitsFromFaceDirection(F_BACK_), 0.0f, 0.0f,
-		POS, POS, NEG, getBitsFromFaceDirection(F_BACK_), 1.0f, 0.0f,
-		POS, NEG, POS, getBitsFromFaceDirection(F_BACK_), 0.0f, 1.0f,
-		POS, POS, POS, getBitsFromFaceDirection(F_BACK_), 1.0f, 1.0f,
+		POS, NEG, NEG, 3.0f, 0.0f, 0.0f,
+		POS, POS, NEG, 3.0f, 1.0f, 0.0f,
+		POS, NEG, POS, 3.0f, 0.0f, 1.0f,
+		POS, POS, POS, 3.0f, 1.0f, 1.0f,
 
 		//-Y face;
-		NEG, NEG, NEG, getBitsFromFaceDirection(F_LEFT_), 0.0f, 0.0f,
-		POS, NEG, NEG, getBitsFromFaceDirection(F_LEFT_), 1.0f, 0.0f,
-		NEG, NEG, POS, getBitsFromFaceDirection(F_LEFT_), 0.0f, 1.0f,
-		POS, NEG, POS, getBitsFromFaceDirection(F_LEFT_), 1.0f, 1.0f,
+		NEG, NEG, NEG, 4.0f, 0.0f, 0.0f,
+		POS, NEG, NEG, 4.0f, 1.0f, 0.0f,
+		NEG, NEG, POS, 4.0f, 0.0f, 1.0f,
+		POS, NEG, POS, 4.0f, 1.0f, 1.0f,
 		//+Y face;
-		NEG, POS, NEG, getBitsFromFaceDirection(F_RIGHT), 0.0f, 0.0f,
-		POS, POS, NEG, getBitsFromFaceDirection(F_RIGHT), 1.0f, 0.0f,
-		NEG, POS, POS, getBitsFromFaceDirection(F_RIGHT), 0.0f, 1.0f,
-		POS, POS, POS, getBitsFromFaceDirection(F_RIGHT), 1.0f, 1.0f,
+		NEG, POS, NEG, 5.0f, 0.0f, 0.0f,
+		POS, POS, NEG, 5.0f, 1.0f, 0.0f,
+		NEG, POS, POS, 5.0f, 0.0f, 1.0f,
+		POS, POS, POS, 5.0f, 1.0f, 1.0f,
 	};
 
 	for (int vIndex=0; vIndex<24; vIndex++) {
@@ -319,12 +275,12 @@ void getVertsAndIndices(
 	}
 
 	std::array<GLuint, 36> preIndices = {
-		 0,  1,  2,  1,  2,  3,
-		 4,  5,  6,  5,  6,  7,
-		 8,  9, 10,  9, 10, 11,
-		12, 13, 14, 13, 14, 15,
-		16, 17, 18, 17, 18, 19,
-		20, 21, 22, 21, 22, 23
+		 0,  2,  1,  1,  2,  3,
+		 4,  5,  6,  5,  7,  6,
+		 8, 10,  9,  9, 10, 11,
+		12, 13, 14, 13, 15, 14,
+		16, 17, 18, 17, 19, 18,
+		20, 22, 21, 21, 22, 23
 	};
 	*indices = preIndices;
 }
@@ -501,6 +457,8 @@ void prepareOpenGL() {
 	glDepthFunc(GL_LESS);
 	glDepthMask(GL_TRUE);
 	glClearDepth(1.0f);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	verticalFOV = 2.0f * atan(tan(display::FOV * 0.5f) * (float(currentRenderResolution.y) / float(currentRenderResolution.x)));
 	
@@ -543,6 +501,10 @@ void draw() {
 	//Uniforms
 	uniforms::bindUniformValue(GLIndex::voxelShader, "pvmMatrix", pvmMatrix);
 	uniforms::bindUniformValue(GLIndex::voxelShader, "voxelGridSize", constants::VOXEL_GRID_DIMENSIONS);
+	uniforms::bindUniformValue(GLIndex::voxelShader, "renderResolution", currentRenderResolution);
+	uniforms::bindUniformValue(GLIndex::voxelShader, "cameraRotation", camera.viewAngle);
+	uniforms::bindUniformValue(GLIndex::voxelShader, "cameraPosition", camera.position);
+	uniforms::bindUniformValue(GLIndex::voxelShader, "FOV", glm::vec2(camera.FOV, verticalFOV));
 
 	glBindVertexArray(GLIndex::voxelVAO);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);

@@ -420,7 +420,11 @@ void prepareOpenGL() {
 	GLIndex::emptyVAO = getEmptyVAO();
 
 	//Voxel SSBO
-	load::modelsFromFile("models/shotgun.vox");
+	std::vector<std::string> modelNames = {
+		"shotgun", "rifle", "blowtorch", "sledge"
+	};
+	glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	for (const std::string& modelName : modelNames) {load::modelsFromFile("models/" + modelName + ".vox", pos); pos.y += 2.0f;}
 	std::vector<GLuint> vData = {}; //0 is "air", or "none".
 	for (types::Model& model : models) {
 		model.dataStartIDX = vData.size();
@@ -430,7 +434,6 @@ void prepareOpenGL() {
 	GLIndex::voxelDataSSBO = createShaderStorageBufferObjectStatic(
 		0, vData.data(), vData.size()*sizeof(GLuint) //Voxel data size is 5×5×6 uints.
 	);
-	GLIndex::voxelDataSize = glm::ivec3(5, 5, 6);
 
 
 	//Debug settings
@@ -535,10 +538,11 @@ void draw() {
 	glm::mat4 invProjMat = glm::inverse(projMat);
 	glm::mat4 invViewMat = glm::inverse(viewMat);
 
-	for (const types::Model& model : models) {
+	for (types::Model& model : models) {
 		drawVoxelModel(
 			model, pvMat, invProjMat, invViewMat //Model & matrices
 		);
+		//model.rotation.y += 0.10f;
 	}
 
 

@@ -17,7 +17,7 @@ release: CFLAGS += -O2 -ffast-math
 release: $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBS) $(INCLUDE) -o $(BINFILE)
 
-debug: CFLAGS += -g -DDEBUG
+debug: CFLAGS += -g
 debug: $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBS) $(INCLUDE) -o $(BINFILE)
 

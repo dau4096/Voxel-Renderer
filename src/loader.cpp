@@ -29,20 +29,21 @@ std::vector<uint8_t> file(const std::string& path) {
 }
 
 
-void modelsFromFile(const std::string filePath) {
+void modelsFromFile(const std::string filePath, glm::vec3 position) {
 	std::vector<uint8_t> fileData = file(filePath);
 	const ogt_vox_scene* scene = ogt_vox_read_scene(fileData.data(), fileData.size());
+	//const uint32_t* palette = scene->palette; //256 values, 0xAARRGGBB.
 	for (uint32_t i=0u; i<scene->num_models; i++) {
 		const ogt_vox_model* model = scene->models[i];
 		models.push_back(types::Model(
-			glm::vec3(1.0f, 0.0f, 0.0f),  //Position
+			position,
 			glm::vec3(0.0f, 0.0f, 0.0f),  //Rotation
 			glm::vec3(1.0f, 1.0f, 1.0f), //Scale
 
 			glm::vec3(
 				model->size_x, model->size_y, model->size_z
 			), //Data dimensions
-			model->voxel_data //Data.
+			model->voxel_data
 		));
 	}
 }

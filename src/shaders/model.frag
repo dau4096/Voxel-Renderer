@@ -6,6 +6,7 @@ out vec4 fragColour; //Final fragment colour.
 
 
 //General values
+uniform mat4 pvmMat; //Projection, View, Model values (Translation, Rotation, Scale.)
 uniform mat4 invProjMat; //Matrix inverse of projMat.
 uniform mat4 invViewMat; //Matrix inverse of viewMat.
 uniform ivec2 resolution; //Screen resolution.
@@ -51,6 +52,11 @@ void main(void) {
 	if (!foundCollision) {discard;}
 
 	//Overwrite gl_FragDepth?
+	vec3 voxelWorldPosition = gridPosition + voxelPosition; //Origin + pos inside grid
+	vec4 clipPos = (pvmMat * vec4(voxelWorldPosition.xyz, 1.0f));
+	float newDepth = clipPos.z / clipPos.w * 0.5f + 0.5f;
+	if (newDepth >= gl_FragDepth) {discard; /* Covered inside the bounding box. */}
+	gl_FragDepth = newDepth;
 
 	//fragColour = vec4(direction.xyz, 1.0f);
 	fragColour = vec4(voxelPosition.xyz / vec3(voxelGridSize.xyz), 1.0f);

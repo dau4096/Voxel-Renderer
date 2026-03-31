@@ -29,11 +29,11 @@ void framebufferSizeCallback(GLFWwindow* Window, int width, int height) {
 }
 
 
-
+double cursorXPos, cursorYPos, cursorXPosPrev, cursorYPosPrev;
 void handleInputs() {
 	glfwPollEvents();
 
-	//Get keyboard inputs for this frame
+	//Get inputs for this frame
 	for (std::pair<int, bool> pair : keyMap) {
 		int keyState = glfwGetKey(Window, pair.first);
 		if (keyState == GLFW_PRESS) {keyMap[pair.first] = true;}
@@ -41,14 +41,65 @@ void handleInputs() {
 	}
 
 
-	//Mouse controls;
-	cursorDelta = cursorPosition - cursorPositionPrevious;
+	if (keyMap[GLFW_KEY_1]) {
+		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	} else {
+		glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwGetCursorPos(Window, &cursorXPos, &cursorYPos);
+	}
+
+	if (keyMap[GLFW_KEY_I]) {camera.FOV *= 0.975f; std::cout << (camera.FOV*constants::TO_DEG) << std::endl;}
+	if (keyMap[GLFW_KEY_O]) {camera.FOV /= 0.975f; std::cout << (camera.FOV*constants::TO_DEG) << std::endl;}
+	camera.FOV = glm::clamp(camera.FOV, 0.05f, constants::PI/2.0f);
+
+
+	//View rotation
+	double cursorXDelta = cursorXPos - cursorXPosPrev;
+	double cursorYDelta = cursorYPos - cursorYPosPrev;
+	camera.viewAngle.x += cursorXDelta * constants::TO_RAD * constants::CAMERA_TURN_SPEED;
+	camera.viewAngle.x = fmodf(camera.viewAngle.x + constants::PI*3.0f, constants::PI2) - constants::PI;
+	double dY = cursorYDelta * constants::TO_RAD * constants::CAMERA_TURN_SPEED;
+	camera.viewAngle.y = glm::clamp(float(camera.viewAngle.y-dY), -0.499f*constants::PI, 0.499f*constants::PI);
+
+
+
+
+	//Speed modifier keys
+	float cameraSpeed = constants::MOVE_SPEED_BASE;
+	float cameraHeight = camera.height;
+	if (keyMap[GLFW_KEY_LEFT_CONTROL]) {
+		cameraSpeed *= constants::MOVE_SPEED_CROUCH_MULT;
+		cameraHeight /= 2.0f;
+	} else if (keyMap[GLFW_KEY_LEFT_SHIFT]) {
+		cameraSpeed *= constants::MOVE_SPEED_RUN_MULT;
+	}
+
+	//Horizontal movement
+	if (keyMap[GLFW_KEY_W]) {
+		camera.position.x += cameraSpeed * sin(camera.viewAngle.x);
+		camera.position.y += cameraSpeed * cos(camera.viewAngle.x);
+	}
+	if (keyMap[GLFW_KEY_S]) {
+		camera.position.x -= cameraSpeed * sin(camera.viewAngle.x);
+		camera.position.y -= cameraSpeed * cos(camera.viewAngle.x);
+	}
+	if (keyMap[GLFW_KEY_A]) {
+		camera.position.x -= cameraSpeed *  cos(camera.viewAngle.x);
+		camera.position.y -= cameraSpeed * -sin(camera.viewAngle.x);
+	}
+	if (keyMap[GLFW_KEY_D]) {
+		camera.position.x += cameraSpeed *  cos(camera.viewAngle.x);
+		camera.position.y += cameraSpeed * -sin(camera.viewAngle.x);
+	}
+
+	//Vertical movement.
+	if (keyMap[GLFW_KEY_E]) {
+		camera.position.z += cameraSpeed;
+	}
+	if (keyMap[GLFW_KEY_Q]) {
+		camera.position.z -= cameraSpeed;
+	}
 }
-
-
-
-//#define SCREENSPACE_ONLY //Only 2D scenes.
-//#define WORLDSPACE_ONLY //Only 3D scenes.
 
 
 
@@ -96,10 +147,12 @@ int main() {
 		float dt = glfwGetTime() - frameStart;
 		if (dev::SHOW_DT_CONSOLE) {std::cout << "Frame #" << frameNumber << " took " << std::setprecision(2) << (dt * 1e3f) << "ms / Hypothetical framerate: " << static_cast<int>(1.0f / dt) << endl;}
 		if (!dev::VSYNC) {while ((glfwGetTime() - frameStart) < display::DT) {std::this_thread::yield();} /* Wait. */}
+		glfwSwapBuffers(Window);
 		frameRate = ceil(1.0f / (glfwGetTime() - frameStart));
 		if (dev::SHOW_HZ_CONSOLE) {std::cout << "Framerate: " << frameRate << "Hz" << std::endl;}
 
-		cursorPositionPrevious = cursorPosition;
+		cursorXPosPrev = cursorXPos;
+		cursorYPosPrev = cursorYPos;
 		frameNumber++;
 	}
 

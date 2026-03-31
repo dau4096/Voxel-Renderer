@@ -4,7 +4,8 @@
 in vec3 gridPosition; //Where in the grid to start DDA from.
 out vec4 fragColour; //Final fragment colour.
 
-uniform mat4 cameraToWorldspaceMat; //Matrix inverse of pvmMat in the vertex shader.
+uniform mat4 invProjMat; //Matrix inverse of projMat.
+uniform mat4 invViewMat; //Matrix inverse of viewMat.
 
 #include <DDA> //Differential-Difference Analysis functions.
 
@@ -13,6 +14,6 @@ uniform mat4 cameraToWorldspaceMat; //Matrix inverse of pvmMat in the vertex sha
 void main(void) {
 
 	//TBA.
-	fragColour = vec4(1.0f, 0.0f, 1.0f, 1.0f);
+	fragColour = vec4(gridPosition.xyz, 1.0f);
 
 }

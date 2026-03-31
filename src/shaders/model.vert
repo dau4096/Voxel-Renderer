@@ -6,7 +6,7 @@ out vec3 gridPosition; //Position of this fragment in the grid, to start DDA fro
 
 
 uniform mat4 pvmMat; //Projection, View, Model values (Translation, Rotation, Scale.)
-uniform ivec3 voxelGridScale; //Size of voxel grid.
+uniform ivec3 voxelGridSize; //Size of voxel grid.
 
 
 //Vertices
@@ -23,9 +23,11 @@ const vec3 vertices[8] = {
 };
 
 //Taken from: [https://www.cs.umd.edu/gvil/papers/av_ts.pdf]
-const uint indices[14] = {
-	4u, 3u, 7u, 8u, 5u, 3u, 1u,
-	4u, 2u, 7u, 6u, 5u, 2u, 1u
+const uint indices[16] = {
+    0u, 1u, 2u, 3u, //Bottom face
+    7u, 2u, 6u, //First side face
+    0u, 4u, 1u, 5u, 3u, 7u, //Side faces continued
+    6u, 5u, 4u //Top face
 };
 
 
@@ -36,7 +38,7 @@ void main(void) {
 	gl_Position = (pvmMat * vec4(v.xyz, 1.0f));
 
 	gridPosition = (
-		(v * 0.5f + 0.5f) * vec3(voxelGridScale) //Convert to [0-1] range, multiply by grid scale.
+		(v * 0.5f + 0.5f) * vec3(voxelGridSize) //Convert to [0-1] range, multiply by grid scale.
 	);
 }
 

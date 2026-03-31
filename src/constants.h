@@ -20,6 +20,12 @@ namespace constants {
 	constexpr float TO_RAD = 0.017453f;
 	constexpr float TO_DEG = 57.29577f;
 
+
+	//Camera values.
+	constexpr float MOVE_SPEED_BASE = 0.025f;
+	constexpr float MOVE_SPEED_CROUCH_MULT = 0.25f;
+	constexpr float MOVE_SPEED_RUN_MULT = 3.0f;
+	constexpr float CAMERA_TURN_SPEED = 0.125f;
 }
 
 namespace display {
@@ -37,6 +43,10 @@ namespace display {
 	//Time
 	constexpr double HZ = 60.0d;
 	constexpr double DT = 1.0f/HZ;
+
+
+	//Camera FOV
+	constexpr float FOV = 70.0f * constants::TO_RAD;
 }
 
 namespace dev {

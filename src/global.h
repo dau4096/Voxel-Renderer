@@ -23,6 +23,7 @@ inline unsigned int frameNumber;
 namespace GLIndex {
 
 //Any indices required for OpenGL stuff.
+inline GLuint modelShader;
 
 }
 

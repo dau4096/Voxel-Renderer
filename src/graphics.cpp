@@ -85,39 +85,45 @@ void APIENTRY openGLErrorCallback(
 //////// SHADER COMPILATION ////////
 static unsigned int lineNumberAt(const std::string& s, size_t pos) {
 	//Find [#line] number from position
-    return std::count(s.begin(), s.begin() + pos, '\n');
+	return std::count(s.begin(), s.begin() + pos, '\n');
 }
 
 std::string preprocessIncludes(const std::string& source, const std::string& currentFile) {
-    std::regex includeRegex(R"(^\s*#include\s*<([^>]+)>)", std::regex_constants::multiline);
+	std::regex includeRegex(R"(^\s*#include\s*<([^>]+)>)", std::regex_constants::multiline);
 
-    std::string result;
-    std::sregex_iterator it(source.begin(), source.end(), includeRegex);
-    std::sregex_iterator end;
+	std::string result;
+	std::sregex_iterator it(source.begin(), source.end(), includeRegex);
+	std::sregex_iterator end;
 
-    size_t lastPos = 0;
-    for (; it!=end; it++) {
-        const std::smatch& match = *it;
+	size_t lastPos = 0;
+	for (; it!=end; it++) {
+		const std::smatch& match = *it;
 
-        //Copy text before include
-        result.append(source.substr(lastPos, match.position() - lastPos));
+		//Copy text before include
+		result.append(source.substr(lastPos, match.position() - lastPos));
 
-        std::string includeFile = match[1].str();
-        std::string includePath = "src/shaders/" + includeFile + ".glsl";
+		std::string includeFile = match[1].str();
+		std::string includePath = "src/shaders/" + includeFile + ".glsl";
 
-        std::string includedSource = utils::readFile(includePath);
+		std::string includedSource = utils::readFile(includePath);
 
-        unsigned int includeLine = lineNumberAt(source, match.position());
+		unsigned int includeLine = lineNumberAt(source, match.position());
 
-        result += "#line 1 \"src/shaders/"+includeFile+".glsl\"\n"+includedSource+"\n"+"#line "+std::to_string(includeLine+1u)+" \""+currentFile+"\"\n";
+	#ifdef LINE_DIRECTIVE_STRING
+		//Can be format `#line [lnNum] [srcFile]`
+		result += "#line 1 \"src/shaders/"+includeFile+".glsl\"\n"+includedSource+"\n"+"#line "+std::to_string(includeLine+1u)+" \""+currentFile+"\"\n";
+	#else
+		//Must be of format `#line [lnNum]`
+		result += "#line 1 \n"+includedSource+"\n"+"#line "+std::to_string(includeLine+1u)+" \n";
+	#endif
 
-        lastPos = match.position() + match.length();
-    }
+		lastPos = match.position() + match.length();
+	}
 
-    // Append remaining source
-    result.append(source.substr(lastPos));
+	// Append remaining source
+	result.append(source.substr(lastPos));
 
-    return result;
+	return result;
 }
 
 
@@ -288,7 +294,7 @@ GLFWwindow* initialiseWindow(glm::ivec2 resolution, const char* title) {
 
 
 //////// SHADER COMPILATION ////////
-GLuint createShaderProgram(std::string fragShaderName, std::string vertexShaderName) {
+GLuint createShaderProgram(std::string vertexShaderName, std::string fragShaderName) {
 	GLuint vertexShader = compileShader(GL_VERTEX_SHADER, "src/shaders/"+ vertexShaderName);
 	GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, "src/shaders/"+ fragShaderName);
 
@@ -371,6 +377,11 @@ void prepareOpenGL() {
 	glDisable(GL_DEPTH_TEST);
 	glDepthMask(GL_FALSE);
 #endif
+
+
+	//Shaders
+	GLIndex::modelShader = createShaderProgram("model.vert", "model.frag");
+
 
 	//Debug settings
 	glEnable(GL_DEBUG_OUTPUT);

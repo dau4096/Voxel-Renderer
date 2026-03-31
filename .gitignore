@@ -28,3 +28,6 @@
 # Compiled programs
 *.exe
 *.x86_64
+
+#Other
+models/*

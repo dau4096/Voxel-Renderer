@@ -22,7 +22,7 @@ namespace constants {
 
 
 	//Camera values.
-	constexpr float MOVE_SPEED_BASE = 0.025f;
+	constexpr float MOVE_SPEED_BASE = 0.0125f;
 	constexpr float MOVE_SPEED_CROUCH_MULT = 0.25f;
 	constexpr float MOVE_SPEED_RUN_MULT = 3.0f;
 	constexpr float CAMERA_TURN_SPEED = 0.125f;

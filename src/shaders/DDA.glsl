@@ -3,12 +3,22 @@
 
 
 
-bool checkVoxel(in ivec3 position, in ivec3 voxelGridSize, out uint foundType) {
-	uint gridValue = voxelData[
+bool checkVoxel(in ivec3 position, in ivec3 voxelGridSize, in ivec2 voxelDataIndices, out uint foundType) {
+	uint index = voxelDataIndices.x + (
 		(position.z * voxelGridSize.y * voxelGridSize.x) +
 		(position.y * voxelGridSize.x) +
 		position.x
-	];
+	);
+	if (
+		((position.x < 0) || (position.x >= voxelGridSize.x)) || 
+		((position.y < 0) || (position.y >= voxelGridSize.y)) || 
+		((position.z < 0) || (position.z >= voxelGridSize.z))
+	) {
+		return false; //Outside grid.
+	}
+	if (index >= voxelDataIndices.y) {return false; /* Outside the data. */}
+
+	uint gridValue = voxelData[index];
 
 	if (gridValue > 0u) {
 		//0 is empty, blank, none, etc.
@@ -20,7 +30,7 @@ bool checkVoxel(in ivec3 position, in ivec3 voxelGridSize, out uint foundType) {
 
 
 bool differentialDifferenceAnalysis(
-	in vec3 origin, in vec3 direction, in ivec3 gridSize, out uint foundType, out vec3 position
+	in vec3 origin, in vec3 direction, in ivec3 gridSize, in ivec2 voxelDataIndices, out uint foundType, out vec3 position
 ) {
 	ivec3 voxel = ivec3(floor(origin));
 	ivec3 step = ivec3(sign(direction));
@@ -44,7 +54,7 @@ bool differentialDifferenceAnalysis(
 	//Traversal loop
 	float t = 0.0f;
 	while (true) {
-		if (checkVoxel(voxel, gridSize, foundType)) {
+		if (checkVoxel(voxel, gridSize, voxelDataIndices, foundType)) {
 			position = origin + (t * direction);
 			return true;
 		}

@@ -1,6 +1,7 @@
 #include "includes.h"
 #include "global.h"
 #include "utils.h"
+#include "loader.h"
 #include <stb_image.h>
 #include <stb_image_write.h>
 using namespace std;
@@ -419,51 +420,15 @@ void prepareOpenGL() {
 	GLIndex::emptyVAO = getEmptyVAO();
 
 	//Voxel SSBO
-	GLuint vData[] = { //0 is "air", or "none".
-		//First layer;
-		0u, 0u, 0u, 0u, 0u,
-		0u, 0u, 0u, 0u, 0u,
-		0u, 0u, 1u, 0u, 0u,
-		0u, 0u, 0u, 0u, 0u,
-		0u, 0u, 0u, 0u, 0u,
-
-		//Second layer;
-		0u, 0u, 0u, 0u, 0u,
-		0u, 0u, 0u, 0u, 0u,
-		0u, 0u, 1u, 0u, 0u,
-		0u, 0u, 0u, 0u, 0u,
-		0u, 0u, 0u, 0u, 0u,
-
-		//Third layer;
-		2u, 2u, 2u, 2u, 2u,
-		2u, 2u, 2u, 2u, 2u,
-		2u, 2u, 1u, 2u, 2u,
-		2u, 2u, 2u, 2u, 2u,
-		0u, 2u, 2u, 2u, 2u,
-
-		//Fourth layer;
-		0u, 2u, 2u, 2u, 2u,
-		2u, 2u, 2u, 2u, 2u,
-		2u, 2u, 1u, 2u, 2u,
-		2u, 2u, 2u, 2u, 2u,
-		0u, 2u, 2u, 2u, 0u,
-
-		//Fifth layer;
-		0u, 0u, 0u, 0u, 0u,
-		0u, 2u, 2u, 2u, 0u,
-		0u, 2u, 1u, 2u, 0u,
-		0u, 2u, 2u, 0u, 0u,
-		0u, 0u, 0u, 0u, 0u,
-
-		//Sixth layer;
-		0u, 0u, 0u, 0u, 0u,
-		0u, 0u, 2u, 0u, 0u,
-		0u, 2u, 2u, 2u, 0u,
-		0u, 0u, 2u, 0u, 0u,
-		0u, 0u, 0u, 0u, 0u,
-	};
+	load::modelsFromFile("models/shotgun.vox");
+	std::vector<GLuint> vData = {}; //0 is "air", or "none".
+	for (types::Model& model : models) {
+		model.dataStartIDX = vData.size();
+		vData.insert(vData.end(), model.data, model.data+(model.dimensions.x*model.dimensions.y*model.dimensions.z));
+		model.dataEndIDX = vData.size();
+	}
 	GLIndex::voxelDataSSBO = createShaderStorageBufferObjectStatic(
-		0, vData, 5u*5u*6u*sizeof(GLuint) //Voxel data size is 5×5×6 uints.
+		0, vData.data(), vData.size()*sizeof(GLuint) //Voxel data size is 5×5×6 uints.
 	);
 	GLIndex::voxelDataSize = glm::ivec3(5, 5, 6);
 
@@ -534,22 +499,25 @@ namespace frame {
 
 
 void drawVoxelModel(
-	const glm::vec3 position, const glm::vec3 rotation, const glm::vec3 scale,
-	const glm::mat4& pvMat, const glm::mat4& invProjMat, const glm::mat4& invViewMat
+	const types::Model& model, const glm::mat4& pvMat, const glm::mat4& invProjMat, const glm::mat4& invViewMat
 ) {
 	//Draws a modelMatrix at some pos/rot/scale.
-	glm::mat4 modelMatrix = graphics::getModelMatrix(position, rotation, scale);
+	glm::mat4 modelMatrix = graphics::getModelMatrix(model.position, model.rotation, glm::normalize(glm::vec3(model.dimensions)));
 	glm::mat4 pvmMat = pvMat * modelMatrix;
 
 	//Run with GL_TRIANGLE_STRIP and 16 indices (To make a cuboid)
 	glUseProgram(GLIndex::modelShader);
 	glBindVertexArray(GLIndex::emptyVAO); //Vertex shader defines vertices.
 
+	//General values
 	uniforms::bindUniformValue(GLIndex::modelShader, "pvmMat", pvmMat);
 	uniforms::bindUniformValue(GLIndex::modelShader, "invProjMat", invProjMat);
 	uniforms::bindUniformValue(GLIndex::modelShader, "invViewMat", invViewMat);
-	uniforms::bindUniformValue(GLIndex::modelShader, "voxelGridSize", GLIndex::voxelDataSize);
 	uniforms::bindUniformValue(GLIndex::modelShader, "resolution", currentWindowResolution);
+
+	//Model values
+	uniforms::bindUniformValue(GLIndex::modelShader, "voxelGridSize", model.dimensions);
+	uniforms::bindUniformValue(GLIndex::modelShader, "voxelDataIndices", glm::ivec2((int)(model.dataStartIDX), (int)(model.dataEndIDX)));
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 16);
 }
@@ -567,12 +535,11 @@ void draw() {
 	glm::mat4 invProjMat = glm::inverse(projMat);
 	glm::mat4 invViewMat = glm::inverse(viewMat);
 
-	drawVoxelModel(
-		glm::vec3(10.0f, 0.0f, 0.0f), //Position
-		glm::vec3(0.0f, 0.0f, 0.0f), //Rotation (Radians)
-		glm::vec3(GLIndex::voxelDataSize), //Scale
-		pvMat, invProjMat, invViewMat //Matrices
-	);
+	for (const types::Model& model : models) {
+		drawVoxelModel(
+			model, pvMat, invProjMat, invViewMat //Model & matrices
+		);
+	}
 
 
 	glBindVertexArray(0);

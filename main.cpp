@@ -66,10 +66,8 @@ void handleInputs() {
 
 	//Speed modifier keys
 	float cameraSpeed = constants::MOVE_SPEED_BASE;
-	float cameraHeight = camera.height;
 	if (keyMap[GLFW_KEY_LEFT_CONTROL]) {
 		cameraSpeed *= constants::MOVE_SPEED_CROUCH_MULT;
-		cameraHeight /= 2.0f;
 	} else if (keyMap[GLFW_KEY_LEFT_SHIFT]) {
 		cameraSpeed *= constants::MOVE_SPEED_RUN_MULT;
 	}

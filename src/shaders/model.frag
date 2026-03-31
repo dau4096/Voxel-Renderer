@@ -4,10 +4,15 @@
 in vec3 gridPosition; //Where in the grid to start DDA from.
 out vec4 fragColour; //Final fragment colour.
 
+
+//General values
 uniform mat4 invProjMat; //Matrix inverse of projMat.
 uniform mat4 invViewMat; //Matrix inverse of viewMat.
 uniform ivec2 resolution; //Screen resolution.
+
+//Model values
 uniform ivec3 voxelGridSize; //Size of voxel grid.
+uniform ivec2 voxelDataIndices; //X: Start, Y: End
 
 
 layout(binding=0) buffer voxelDataSSBO {
@@ -42,8 +47,10 @@ void main(void) {
 
 	uint foundType; //Type of voxel, if one hit.
 	vec3 voxelPosition; //Position within grid of the voxel. Is not floored to grid.
-	bool foundCollision = differentialDifferenceAnalysis(gridPosition, direction, voxelGridSize, foundType, voxelPosition);
+	bool foundCollision = differentialDifferenceAnalysis(gridPosition, direction, voxelGridSize, voxelDataIndices, foundType, voxelPosition);
 	if (!foundCollision) {discard;}
+
+	//Overwrite gl_FragDepth?
 
 	//fragColour = vec4(direction.xyz, 1.0f);
 	fragColour = vec4(voxelPosition.xyz / vec3(voxelGridSize.xyz), 1.0f);

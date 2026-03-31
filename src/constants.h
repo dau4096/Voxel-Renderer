@@ -52,7 +52,7 @@ namespace display {
 namespace dev {
 	//Assorted DEV/DEBUG constants
 	constexpr bool PAUSE_ON_OPENGL_ERROR = true;
-	constexpr bool SHOW_HZ_CONSOLE = true;
-	constexpr bool SHOW_DT_CONSOLE = true;
+	constexpr bool SHOW_HZ_CONSOLE = false;
+	constexpr bool SHOW_DT_CONSOLE = false;
 	constexpr bool VSYNC = false;
 }

@@ -494,6 +494,7 @@ void drawVoxelModel(
 	uniforms::bindUniformValue(GLIndex::modelShader, "invProjMat", invProjMat);
 	uniforms::bindUniformValue(GLIndex::modelShader, "invViewMat", invViewMat);
 	uniforms::bindUniformValue(GLIndex::modelShader, "voxelGridSize", glm::ivec3(1,1,1)); //PLACEHOLDER
+	uniforms::bindUniformValue(GLIndex::modelShader, "resolution", currentWindowResolution);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 16);
 }

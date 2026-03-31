@@ -386,10 +386,17 @@ inline GLuint getEmptyVAO() {
 void prepareOpenGL() {
 	//OpenGL setup;
 	glViewport(0, 0, display::RENDER_RESOLUTION.x, display::RENDER_RESOLUTION.y);
+
+	//Depth testing
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
 	glClearDepth(1.0f);
+
+
+	//Culling
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 
 	//Shaders

@@ -24,7 +24,7 @@ const vec3 vertices[8] = {
 
 //Taken from: [https://www.cs.umd.edu/gvil/papers/av_ts.pdf]
 const uint indices[16] = {
-    0u, 1u, 2u, 3u, //Bottom face
+    0u, 2u, 1u, 3u, //Bottom face
     7u, 2u, 6u, //First side face
     0u, 4u, 1u, 5u, 3u, 7u, //Side faces continued
     6u, 5u, 4u //Top face

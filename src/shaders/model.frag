@@ -33,6 +33,7 @@ void main(void) {
 	//Get direction of ray.
 	vec3 direction = getFragDirection();
 
-	fragColour = vec4(direction.xyz, 1.0f);
+	//fragColour = vec4(direction.xyz, 1.0f);
+	fragColour = vec4(gridPosition.xyz, 1.0f);
 
 }

@@ -337,11 +337,13 @@ GLuint createShaderProgram(std::string vertexShaderName, std::string fragShaderN
 
 
 //////// SSBOs ////////
-GLuint createShaderStorageBufferObject(int binding, size_t bufferSize=0, GLuint glType=GL_DYNAMIC_DRAW) {
+//Data added once, never changes.
+template<typename T>
+GLuint createShaderStorageBufferObjectStatic(int binding, T* ptr, size_t bufferSize=0u) {
 	GLuint SSBO;
 	glGenBuffers(1, &SSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, glType);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, ptr, GL_STATIC_DRAW);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, SSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
@@ -349,8 +351,21 @@ GLuint createShaderStorageBufferObject(int binding, size_t bufferSize=0, GLuint 
 }
 
 
+//Data changes at any time.
+GLuint createShaderStorageBufferObjectDynamic(int binding, size_t bufferSize=0u) {
+	GLuint SSBO;
+	glGenBuffers(1, &SSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, SSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+	return SSBO;
+}
+
+//Update dynamic SSBO.
 template<typename T>
-void updateShaderStorageBufferObject(
+void updateShaderStorageBufferObjectDynamic(
 	GLuint SSBO,
 	T* data,
 	size_t count
@@ -393,17 +408,64 @@ void prepareOpenGL() {
 	glDepthMask(GL_TRUE);
 	glClearDepth(1.0f);
 
-
 	//Culling
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
-
 	//Shaders
 	GLIndex::modelShader = createShaderProgram("model.vert", "model.frag");
 
-
+	//Empty VAO
 	GLIndex::emptyVAO = getEmptyVAO();
+
+	//Voxel SSBO
+	GLuint vData[] = { //0 is "air", or "none".
+		//First layer;
+		0u, 0u, 0u, 0u, 0u,
+		0u, 0u, 0u, 0u, 0u,
+		0u, 0u, 1u, 0u, 0u,
+		0u, 0u, 0u, 0u, 0u,
+		0u, 0u, 0u, 0u, 0u,
+
+		//Second layer;
+		0u, 0u, 0u, 0u, 0u,
+		0u, 0u, 0u, 0u, 0u,
+		0u, 0u, 1u, 0u, 0u,
+		0u, 0u, 0u, 0u, 0u,
+		0u, 0u, 0u, 0u, 0u,
+
+		//Third layer;
+		2u, 2u, 2u, 2u, 2u,
+		2u, 2u, 2u, 2u, 2u,
+		2u, 2u, 1u, 2u, 2u,
+		2u, 2u, 2u, 2u, 2u,
+		0u, 2u, 2u, 2u, 2u,
+
+		//Fourth layer;
+		0u, 2u, 2u, 2u, 2u,
+		2u, 2u, 2u, 2u, 2u,
+		2u, 2u, 1u, 2u, 2u,
+		2u, 2u, 2u, 2u, 2u,
+		0u, 2u, 2u, 2u, 0u,
+
+		//Fifth layer;
+		0u, 0u, 0u, 0u, 0u,
+		0u, 2u, 2u, 2u, 0u,
+		0u, 2u, 1u, 2u, 0u,
+		0u, 2u, 2u, 0u, 0u,
+		0u, 0u, 0u, 0u, 0u,
+
+		//Sixth layer;
+		0u, 0u, 0u, 0u, 0u,
+		0u, 0u, 2u, 0u, 0u,
+		0u, 2u, 2u, 2u, 0u,
+		0u, 0u, 2u, 0u, 0u,
+		0u, 0u, 0u, 0u, 0u,
+	};
+	GLIndex::voxelDataSSBO = createShaderStorageBufferObjectStatic(
+		0, vData, 5u*5u*6u*sizeof(GLuint) //Voxel data size is 5×5×6 uints.
+	);
+	GLIndex::voxelDataSize = glm::ivec3(5, 5, 6);
 
 
 	//Debug settings
@@ -500,7 +562,7 @@ void drawVoxelModel(
 	uniforms::bindUniformValue(GLIndex::modelShader, "pvmMat", pvmMat);
 	uniforms::bindUniformValue(GLIndex::modelShader, "invProjMat", invProjMat);
 	uniforms::bindUniformValue(GLIndex::modelShader, "invViewMat", invViewMat);
-	uniforms::bindUniformValue(GLIndex::modelShader, "voxelGridSize", glm::ivec3(1,1,1)); //PLACEHOLDER
+	uniforms::bindUniformValue(GLIndex::modelShader, "voxelGridSize", GLIndex::voxelDataSize);
 	uniforms::bindUniformValue(GLIndex::modelShader, "resolution", currentWindowResolution);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 16);

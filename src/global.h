@@ -31,6 +31,10 @@ namespace GLIndex {
 inline GLuint emptyVAO;
 inline GLuint modelShader;
 
+//Voxel Data
+inline GLuint voxelDataSSBO;
+inline glm::ivec3 voxelDataSize; //Size of the voxel grid
+
 }
 
 

@@ -8,6 +8,13 @@ uniform mat4 invProjMat; //Matrix inverse of projMat.
 uniform mat4 invViewMat; //Matrix inverse of viewMat.
 uniform ivec2 resolution; //Screen resolution.
 
+
+
+layout(binding=0) buffer voxelDataSSBO {
+	uint voxelData[];
+};
+
+
 #include <DDA> //Differential-Difference Analysis functions.
 
 

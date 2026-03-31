@@ -22,7 +22,7 @@ const vec3 vertices[8] = {
 	vec3( 1.0f,  1.0f,  1.0f)  //+XYZ
 };
 
-//Taken from: [https://www.cs.umd.edu/gvil/papers/av_ts.pdf]
+
 const uint indices[16] = {
     0u, 2u, 1u, 3u, //Bottom face
     7u, 2u, 6u, //First side face

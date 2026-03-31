@@ -1,0 +1,419 @@
+#include "includes.h"
+#include "global.h"
+#include "utils.h"
+#include <stb_image.h>
+#include <stb_image_write.h>
+using namespace std;
+using namespace utils;
+using namespace glm;
+
+
+
+
+
+
+
+
+//////// DEBUG ////////
+void APIENTRY openGLErrorCallback(
+		GLenum source,
+		GLenum type, GLuint id,
+		GLenum severity,
+		GLsizei length, const GLchar* message,
+		const void* userParam
+	) {
+	/*
+	Nicely formatted callback from;
+	[https://learnopengl.com/In-Practice/Debugging]
+	*/
+	if ((id == 131169u) || (id == 131185u) || (id == 131218u) || (id == 131204u)) {return; /* Ignored warning IDs that are not errors */}
+
+	std::cout << "---------------" << std::endl << "Debug message (" << id << ") | " << message << std::endl;
+
+	switch (source)
+	{
+		case GL_DEBUG_SOURCE_API:             {std::cout << "Source: API"; break;}
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   {std::cout << "Source: Window System"; break;}
+		case GL_DEBUG_SOURCE_SHADER_COMPILER: {std::cout << "Source: Shader Compiler"; break;}
+		case GL_DEBUG_SOURCE_THIRD_PARTY:     {std::cout << "Source: Third Party"; break;}
+		case GL_DEBUG_SOURCE_APPLICATION:     {std::cout << "Source: Application"; break;}
+		case GL_DEBUG_SOURCE_OTHER:           {std::cout << "Source: Other"; break;}
+	} std::cout << std::endl;
+
+	switch (type)
+	{
+		case GL_DEBUG_TYPE_ERROR:               {std::cout << "Type: Error"; break;}
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: {std::cout << "Type: Deprecated Behaviour"; break;}
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  {std::cout << "Type: Undefined Behaviour"; break;} 
+		case GL_DEBUG_TYPE_PORTABILITY:         {std::cout << "Type: Portability"; break;}
+		case GL_DEBUG_TYPE_PERFORMANCE:         {std::cout << "Type: Performance"; break;}
+		case GL_DEBUG_TYPE_MARKER:              {std::cout << "Type: Marker"; break;}
+		case GL_DEBUG_TYPE_PUSH_GROUP:          {std::cout << "Type: Push Group"; break;}
+		case GL_DEBUG_TYPE_POP_GROUP:           {std::cout << "Type: Pop Group"; break;}
+		case GL_DEBUG_TYPE_OTHER:               {std::cout << "Type: Other"; break;}
+	} std::cout << std::endl;
+	
+	switch (severity)
+	{
+		case GL_DEBUG_SEVERITY_HIGH:         {std::cout << "Severity: high"; break;}
+		case GL_DEBUG_SEVERITY_MEDIUM:       {std::cout << "Severity: medium"; break;}
+		case GL_DEBUG_SEVERITY_LOW:          {std::cout << "Severity: low"; break;}
+		case GL_DEBUG_SEVERITY_NOTIFICATION: {std::cout << "Severity: notification"; break;}
+	} std::cout << std::endl << std::endl;
+
+	if (dev::PAUSE_ON_OPENGL_ERROR) {
+		utils::pause();
+	}
+}
+//////// DEBUG ////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////// SHADER COMPILATION ////////
+static unsigned int lineNumberAt(const std::string& s, size_t pos) {
+	//Find [#line] number from position
+    return std::count(s.begin(), s.begin() + pos, '\n');
+}
+
+std::string preprocessIncludes(const std::string& source, const std::string& currentFile) {
+    std::regex includeRegex(R"(^\s*#include\s*<([^>]+)>)", std::regex_constants::multiline);
+
+    std::string result;
+    std::sregex_iterator it(source.begin(), source.end(), includeRegex);
+    std::sregex_iterator end;
+
+    size_t lastPos = 0;
+    for (; it!=end; it++) {
+        const std::smatch& match = *it;
+
+        //Copy text before include
+        result.append(source.substr(lastPos, match.position() - lastPos));
+
+        std::string includeFile = match[1].str();
+        std::string includePath = "src/shaders/" + includeFile + ".glsl";
+
+        std::string includedSource = utils::readFile(includePath);
+
+        unsigned int includeLine = lineNumberAt(source, match.position());
+
+        result += "#line 1 \"src/shaders/"+includeFile+".glsl\"\n"+includedSource+"\n"+"#line "+std::to_string(includeLine+1u)+" \""+currentFile+"\"\n";
+
+        lastPos = match.position() + match.length();
+    }
+
+    // Append remaining source
+    result.append(source.substr(lastPos));
+
+    return result;
+}
+
+
+
+GLuint compileShader(GLenum shaderType, string filePath) {
+	std::string source = utils::readFile(filePath);
+	source = preprocessIncludes(source, filePath);
+	const char* src = source.c_str();
+
+	//Create a shader id
+	GLuint shader = glCreateShader(shaderType);
+	if (shader == 0) {
+		raise("Error: Failed to create shader.");
+		return 0;
+	}
+
+	//Attach the shader src
+	glShaderSource(shader, 1, &src, nullptr);
+	glCompileShader(shader);
+	
+
+	//Errorcheck
+	GLint success;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		if (!utils::isConsoleVisible()) {
+			utils::showConsole();
+		}
+		char infolog[512];
+		glGetShaderInfoLog(shader, 512, nullptr, infolog);
+		raise("Error: Shader compilation failed;\n" + string(infolog));
+	}
+
+	return shader;
+}
+//////// SHADER COMPILATION ////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+namespace uniforms {
+
+//Uniforms; [Many overloads]
+static inline void bindUniformValue(GLuint shaderProgram, const GLchar* uniformName, bool value) {
+	GLuint location = glGetUniformLocation(shaderProgram, uniformName);
+	if (location >= 0) {
+		glUniform1i(location, value);
+	}
+}
+static inline void bindUniformValue(GLuint shaderProgram, const GLchar* uniformName, size_t value) {
+	GLuint location = glGetUniformLocation(shaderProgram, uniformName);
+	if (location >= 0) {
+		glUniform1ui(location, value);
+	}
+}
+static inline void bindUniformValue(GLuint shaderProgram, const GLchar* uniformName, int value) {
+	GLuint location = glGetUniformLocation(shaderProgram, uniformName);
+	if (location >= 0) {
+		glUniform1i(location, value);
+	}
+}
+static inline void bindUniformValue(GLuint shaderProgram, const GLchar* uniformName, float value) {
+	GLuint location = glGetUniformLocation(shaderProgram, uniformName);
+	if (location >= 0) {
+		glUniform1f(location, value);
+	}
+}
+static inline void bindUniformValue(GLuint shaderProgram, const GLchar* uniformName, glm::ivec2 value) {
+	GLuint location = glGetUniformLocation(shaderProgram, uniformName);
+	if (location >= 0) {
+		glUniform2i(location, value.x, value.y);
+	}
+}
+static inline void bindUniformValue(GLuint shaderProgram, const GLchar* uniformName, glm::vec2 value) {
+	GLuint location = glGetUniformLocation(shaderProgram, uniformName);
+	if (location >= 0) {
+		glUniform2f(location, value.x, value.y);
+	}
+}
+static inline void bindUniformValue(GLuint shaderProgram, const GLchar* uniformName, glm::ivec3 value) {
+	GLuint location = glGetUniformLocation(shaderProgram, uniformName);
+	if (location >= 0) {
+		glUniform3i(location, value.x, value.y, value.z);
+	}
+}
+static inline void bindUniformValue(GLuint shaderProgram, const GLchar* uniformName, glm::vec3 value) {
+	GLuint location = glGetUniformLocation(shaderProgram, uniformName);
+	if (location >= 0) {
+		glUniform3f(location, value.x, value.y, value.z);
+	}
+}
+static inline void bindUniformValue(GLuint shaderProgram, const GLchar* uniformName, glm::ivec4 value) {
+	GLuint location = glGetUniformLocation(shaderProgram, uniformName);
+	if (location >= 0) {
+		glUniform4i(location, value.x, value.y, value.z, value.w);
+	}
+}
+static inline void bindUniformValue(GLuint shaderProgram, const GLchar* uniformName, glm::vec4 value) {
+	GLuint location = glGetUniformLocation(shaderProgram, uniformName);
+	if (location >= 0) {
+		glUniform4f(location, value.x, value.y, value.z, value.w);
+	}
+}
+
+}
+
+
+
+
+
+
+
+
+
+namespace graphics {
+
+GLFWwindow* initialiseWindow(glm::ivec2 resolution, const char* title) {
+	if (!glfwInit()) {
+		raise("Failed to initialize GLFW");
+		return nullptr;
+	}
+
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, display::OPENGL_VERSION_MAJOR);  //OpenGL major ver (4)
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, display::OPENGL_VERSION_MINOR);  //OpenGL minor ver (6)
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  //Use Core (not ES)
+
+
+	GLFWwindow* Window = glfwCreateWindow(resolution.x, resolution.y, title, NULL, NULL);
+	if (!Window) {
+		glfwTerminate();
+		raise("Failed to create GLFW window");
+		return nullptr;
+	}
+	glfwMakeContextCurrent(Window);
+
+	glewExperimental = GL_TRUE;
+	if (glewInit() != GLEW_OK) {
+		raise("Failed to initialize GLEW.");
+	}
+
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	return Window;
+}
+
+
+
+
+
+
+
+
+
+
+//////// SHADER COMPILATION ////////
+GLuint createShaderProgram(std::string fragShaderName, std::string vertexShaderName) {
+	GLuint vertexShader = compileShader(GL_VERTEX_SHADER, "src/shaders/"+ vertexShaderName);
+	GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, "src/shaders/"+ fragShaderName);
+
+	GLuint shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+
+	GLint success;
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if (!success) {
+		if (!utils::isConsoleVisible()) {
+			utils::showConsole();
+		}
+		char infolog[512];
+		glGetProgramInfoLog(shaderProgram, 512, nullptr, infolog);
+		raise("Error: Program linking failed;\n" + string(infolog));
+	}
+
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	return shaderProgram;
+}
+//////// SHADER COMPILATION ////////
+
+
+
+
+
+
+
+
+
+
+//////// SSBOs ////////
+GLuint createShaderStorageBufferObject(int binding, size_t bufferSize=0, GLuint glType=GL_DYNAMIC_DRAW) {
+	GLuint SSBO;
+	glGenBuffers(1, &SSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, glType);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, SSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+	return SSBO;
+}
+
+
+template<typename T>
+void updateShaderStorageBufferObject(
+	GLuint SSBO,
+	T* data,
+	size_t count
+) {
+	size_t size = sizeof(T) * count;
+
+	if (count > 0) {
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, size, data);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+}
+//////// SSBOs ////////
+
+
+
+
+
+
+
+
+
+
+
+//////// INITIALISATION ////////
+void prepareOpenGL() {
+	//OpenGL setup;
+	glViewport(0, 0, display::RENDER_RESOLUTION.x, display::RENDER_RESOLUTION.y);
+#ifdef SCREENSPACE_ONLY
+	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+#endif
+
+	//Debug settings
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glDebugMessageCallback(openGLErrorCallback, nullptr);
+	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+
+	utils::GLErrorcheck("Initialisation", true); //Old basic debugging
+}
+//////// INITIALISATION ////////
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+namespace frame {
+
+
+void drawVoxelModel(
+	const glm::vec3 position, const glm::vec3 rotation, const glm::vec3 scale,
+	const glm::mat4& pvMat
+) {
+	//Draws a model at some pos/rot/scale.
+
+}
+
+
+void draw() {
+	
+
+
+}
+
+
+
+}

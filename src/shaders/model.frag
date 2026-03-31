@@ -7,7 +7,7 @@ out vec4 fragColour; //Final fragment colour.
 uniform mat4 invProjMat; //Matrix inverse of projMat.
 uniform mat4 invViewMat; //Matrix inverse of viewMat.
 uniform ivec2 resolution; //Screen resolution.
-
+uniform ivec3 voxelGridSize; //Size of voxel grid.
 
 
 layout(binding=0) buffer voxelDataSSBO {
@@ -40,7 +40,12 @@ void main(void) {
 	//Get direction of ray.
 	vec3 direction = getFragDirection();
 
+	uint foundType; //Type of voxel, if one hit.
+	vec3 voxelPosition; //Position within grid of the voxel. Is not floored to grid.
+	bool foundCollision = differentialDifferenceAnalysis(gridPosition, direction, voxelGridSize, foundType, voxelPosition);
+	if (!foundCollision) {discard;}
+
 	//fragColour = vec4(direction.xyz, 1.0f);
-	fragColour = vec4(gridPosition.xyz, 1.0f);
+	fragColour = vec4(voxelPosition.xyz / vec3(voxelGridSize.xyz), 1.0f);
 
 }

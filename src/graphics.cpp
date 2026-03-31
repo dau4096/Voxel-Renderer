@@ -500,34 +500,20 @@ static inline glm::mat4 viewMatrix() {
 }
 
 glm::mat4 getModelMatrix(
-	const glm::vec3 position, const glm::vec3 rotation, const glm::vec3 scale
+	const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale
 ) {
 	//Rotate, Scale, Translate.
-	glm::mat4 translationMat = glm::mat4(
-		1.0f, 	0.0f, 	0.0f, 	position.x,
-		0.0f, 	1.0f, 	0.0f, 	position.y,
-		0.0f, 	0.0f, 	1.0f, 	position.z,
-		0.0f, 	0.0f, 	0.0f, 	1.0f
-	);
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
 
-	float sx = sin(rotation.x), cx = cos(rotation.x);
-	float sy = sin(rotation.y), cy = cos(rotation.y);
-	float sz = sin(rotation.z), cz = cos(rotation.z);
-	glm::mat4 rotationMat = glm::mat4(
-		cy*cz, 				cy*sz, 				-sy, 		0.0f,
-		sx*sy*cz-cx*sz, 	sx*sy*sz+cx*cz, 	 sx*cy, 	0.0f,
-		cx*sy*cz+sx*sz, 	cx*sy*sz-sx*cz, 	 cx*cy, 	0.0f,
-		0.0f, 				0.0f, 				 0.0f, 		1.0f
-	);
+    modelMatrix = glm::translate(modelMatrix, position);
 
-	glm::mat4 scaleMat = glm::mat4(
-		scale.x,	0.0f, 		0.0f,		0.0f, 
-		0.0f, 		scale.y,	0.0f, 		0.0f, 
-		0.0f, 		0.0f, 		scale.z,	0.0f, 
-		0.0f, 		0.0f, 		0.0f, 		1.0f
-	);
+    modelMatrix = glm::rotate(modelMatrix, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    modelMatrix = glm::rotate(modelMatrix, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    modelMatrix = glm::rotate(modelMatrix, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
-	return rotationMat * scaleMat * translationMat;
+    modelMatrix = glm::scale(modelMatrix, scale);
+
+	return modelMatrix;
 }
 //////// MATRICES ////////
 
@@ -551,7 +537,7 @@ void drawVoxelModel(
 	const glm::vec3 position, const glm::vec3 rotation, const glm::vec3 scale,
 	const glm::mat4& pvMat, const glm::mat4& invProjMat, const glm::mat4& invViewMat
 ) {
-	//Draws a model at some pos/rot/scale.
+	//Draws a modelMatrix at some pos/rot/scale.
 	glm::mat4 modelMatrix = graphics::getModelMatrix(position, rotation, scale);
 	glm::mat4 pvmMat = pvMat * modelMatrix;
 
@@ -582,9 +568,9 @@ void draw() {
 	glm::mat4 invViewMat = glm::inverse(viewMat);
 
 	drawVoxelModel(
-		glm::vec3(0.0f, 0.0f, 0.0f), //Position
+		glm::vec3(10.0f, 0.0f, 0.0f), //Position
 		glm::vec3(0.0f, 0.0f, 0.0f), //Rotation (Radians)
-		glm::vec3(1.0f, 1.0f, 1.0f), //Scale
+		glm::vec3(GLIndex::voxelDataSize), //Scale
 		pvMat, invProjMat, invViewMat //Matrices
 	);
 

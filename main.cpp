@@ -116,7 +116,7 @@ int main() {
 		glm::min(display::WINDOW_RESOLUTION.y, display::RENDER_RESOLUTION.y)
 	);
 
-	Window = graphics::initialiseWindow(display::WINDOW_RESOLUTION, "Graphics-Template/OpenGL");
+	Window = graphics::initialiseWindow(display::WINDOW_RESOLUTION, "Voxel-Renderer/Rewrite26");
 	glfwSetFramebufferSizeCallback(Window, framebufferSizeCallback);
 	glfwGetCursorPos(Window, &cursorPosition.x, &cursorPosition.y);
 	glEnable(GL_BLEND);

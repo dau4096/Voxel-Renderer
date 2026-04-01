@@ -9,6 +9,7 @@ out vec4 fragColour; //Final fragment colour.
 uniform mat4 pvmMat; //Projection, View, Model values (Translation, Rotation, Scale.)
 uniform mat4 invProjMat; //Matrix inverse of projMat.
 uniform mat4 invViewMat; //Matrix inverse of viewMat.
+uniform mat4 invRotationMat; //Matrix inverse of rotationMatrix.
 uniform ivec2 resolution; //Screen resolution.
 
 //Model values
@@ -44,7 +45,7 @@ vec3 getFragDirection() {
 void main(void) {
 
 	//Get direction of ray.
-	vec3 direction = getFragDirection();
+	vec3 direction = (invRotationMat * vec4(getFragDirection().xyz, 1.0f)).xyz;
 
 	uint foundType; //Type of voxel, if one hit.
 	vec3 voxelPosition; //Position within grid of the voxel. Is not floored to grid.

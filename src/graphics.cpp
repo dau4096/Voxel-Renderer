@@ -468,16 +468,14 @@ static inline glm::mat4 viewMatrix() {
 }
 
 glm::mat4 getModelMatrix(
-	const glm::vec3& position, const glm::vec3& rotation, const glm::vec3& scale
+	const glm::vec3& position, const glm::mat4& rotationMatrix, const glm::vec3& scale
 ) {
 	//Rotate, Scale, Translate.
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     modelMatrix = glm::translate(modelMatrix, position);
 
-    modelMatrix = glm::rotate(modelMatrix, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-    modelMatrix = glm::rotate(modelMatrix, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-    modelMatrix = glm::rotate(modelMatrix, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+    modelMatrix *= rotationMatrix;
 
     modelMatrix = glm::scale(modelMatrix, scale);
 
@@ -505,8 +503,16 @@ void drawVoxelModel(
 	const types::Model& model, const glm::mat4& pvMat, const glm::mat4& invProjMat, const glm::mat4& invViewMat
 ) {
 	//Draws a modelMatrix at some pos/rot/scale.
-	glm::mat4 modelMatrix = graphics::getModelMatrix(model.position, model.rotation, glm::normalize(glm::vec3(model.dimensions)));
+	glm::mat4 rotationMat = glm::mat4(1.0f);
+    rotationMat = glm::rotate(rotationMat, model.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+    rotationMat = glm::rotate(rotationMat, model.rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationMat = glm::rotate(rotationMat, model.rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
+
+	glm::mat4 modelMatrix = graphics::getModelMatrix(model.position, rotationMat, glm::normalize(glm::vec3(model.dimensions)));
 	glm::mat4 pvmMat = pvMat * modelMatrix;
+
+	glm::mat4 invRotMat = glm::inverse(rotationMat);
 
 	//Run with GL_TRIANGLE_STRIP and 16 indices (To make a cuboid)
 	glUseProgram(GLIndex::modelShader);
@@ -516,6 +522,7 @@ void drawVoxelModel(
 	uniforms::bindUniformValue(GLIndex::modelShader, "pvmMat", pvmMat);
 	uniforms::bindUniformValue(GLIndex::modelShader, "invProjMat", invProjMat);
 	uniforms::bindUniformValue(GLIndex::modelShader, "invViewMat", invViewMat);
+	uniforms::bindUniformValue(GLIndex::modelShader, "invRotationMat", invRotMat);
 	uniforms::bindUniformValue(GLIndex::modelShader, "resolution", currentWindowResolution);
 
 	//Model values
@@ -542,7 +549,8 @@ void draw() {
 		drawVoxelModel(
 			model, pvMat, invProjMat, invViewMat //Model & matrices
 		);
-		//model.rotation.y += 0.10f;
+		model.rotation.y += 0.0125f;
+		model.rotation.x += 0.00625f;
 	}
 
 
